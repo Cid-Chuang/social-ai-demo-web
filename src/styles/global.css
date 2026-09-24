@@ -45,6 +45,11 @@
   --color-fault-bg: #fbebeb;
   --color-fault-rule: #e6bcbc;
 
+  /* 敏感內容轉人工：已妥善處理，不是失敗，刻意與 refused／error 的警示色分開 */
+  --color-escalate: #10566b;
+  --color-escalate-bg: #e5f0f4;
+  --color-escalate-rule: #b4d3dd;
+
   --font-sans: 'Taipei Sans TC', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-serif: 'Noto Serif TC', 'Songti TC', Georgia, serif;
 

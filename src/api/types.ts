@@ -32,10 +32,18 @@ export interface ChatRequest {
   topic?: Topic
 }
 
-export interface ChatResponse {
-  answer: string
-  sources: Source[]
-}
+/**
+ * 問答的回應。
+ *
+ * `escalated` 代表問題被判定為敏感（法律爭議、醫療宣稱、個資等），
+ * 助手刻意**不生成內容**，改為轉交真人處理 —— 與檔期的 `refused` 是同一類守門行為。
+ *
+ * 需求文件第四節的初版合約沒有 `status` 欄位，只有 `{ answer, sources }`。
+ * 這裡是**向後相容的擴充**：後端若回傳舊格式，normalizeChat() 會視為 `answered`。
+ */
+export type ChatResponse =
+  | { status: 'answered'; answer: string; sources: Source[] }
+  | { status: 'escalated'; reason: string; category?: string }
 
 /** POST /api/campaigns/{id}/generate */
 export interface GenerateRequest {

@@ -2,10 +2,12 @@ import { useState } from 'react'
 import { isMockMode } from './api'
 import { ChatPanel } from './panels/ChatPanel'
 import { CampaignPanel } from './panels/CampaignPanel'
+import { TonePanel } from './panels/TonePanel'
 
 const TABS = [
   { id: 'chat', label: '問答展示' },
   { id: 'campaign', label: '檔期貼文生成' },
+  { id: 'tone', label: '語氣比較' },
 ] as const
 
 type TabId = (typeof TABS)[number]['id']
@@ -64,6 +66,10 @@ export function App() {
           hidden={tab !== 'campaign'}
         >
           {tab === 'campaign' ? <CampaignPanel /> : null}
+        </div>
+
+        <div role="tabpanel" id="panel-tone" aria-labelledby="tab-tone" hidden={tab !== 'tone'}>
+          {tab === 'tone' ? <TonePanel /> : null}
         </div>
 
         <p className="mt-10 border-t border-desk-edge pt-[18px] text-[13px] text-ink-faint">

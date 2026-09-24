@@ -91,27 +91,63 @@ const CHAT_REPLIES: { match: RegExp; answer: string; sources: Source[] }[] = [
   },
 ]
 
+/**
+ * 敏感內容規則。命中時助手不生成內容，改為轉人工。
+ *
+ * 關鍵字刻意寫得精準：用 /告/ 會誤判「告訴我品牌語氣」這種一般問題，
+ * 所以改用「提告」「要告」等明確語境。誤判在展示場合比漏判更難看。
+ */
+const SENSITIVE_RULES: { match: RegExp; category: string; reason: string }[] = [
+  {
+    match: /提告|要告|訴訟|律師|求償|賠償|法律責任|消保官/,
+    category: '法律爭議與客訴求償',
+    reason:
+      '這則訊息涉及法律爭議或求償，助手不會自行擬定對外說法。已轉由真人客服接手，並同步通知法務。',
+  },
+  {
+    match: /療效|治療|療程|醫療|改善.*(失眠|過敏|疼痛)|功效.*(疾病|症狀)/,
+    category: '醫療與療效宣稱',
+    reason:
+      '這則訊息涉及醫療或療效宣稱，依法不得由助手自行生成對外說法。已轉由真人審核，必要時會請法務確認用語。',
+  },
+  {
+    match: /個資|身分證|私人電話|住家地址|把.*(電話|地址).*(貼|公開|回覆)/,
+    category: '個人資料揭露',
+    reason:
+      '這則訊息要求在公開管道揭露個人資料，助手不會執行。已轉由真人客服改以私訊管道處理。',
+  },
+]
+
 const FALLBACK_REPLY: ChatResponse = {
+  status: 'answered',
   answer:
     '知識庫目前沒有直接對應這個問題的內容。\n\n可以試著問品牌語氣的設定、出貨與退換貨規則，或是本季的社群趨勢觀察 —— 這幾個主題在知識庫中有完整的參考文件。',
   sources: [BRAND_VOICE],
 }
 
-const GENERATED_POSTS: Record<string, { post: string; sources: Source[] }> = {
-  'midautumn-2026': {
-    post:
-      '中秋連假的陽台，是一年裡最適合待著的地方。\n\n把折疊小桌搬出來，柚子剝一半放著，風從欄杆吹進來剛剛好。不用烤肉也能過節，坐得舒服比什麼都重要。\n\n禾光戶外折疊桌椅組，中秋檔期組合價 1,880 元，即日起到 9/30。\n官網選購：生活提案專區\n\n#中秋 #陽台生活 #禾光生活',
-    sources: [
-      BRAND_VOICE,
-      POSTING_GUIDE,
-      {
-        document: 'product_midautumn_2026.md',
-        topic: 'social',
-        snippet:
-          '中秋檔期主打戶外折疊桌椅組，組合價 1,880 元（原價 2,380 元），檔期 9/15 至 9/30。溝通主軸為「不烤肉也能過節」的陽台場景。',
-      },
-    ],
-  },
+const MIDAUTUMN_PRODUCT: Source = {
+  document: 'product_midautumn_2026.md',
+  topic: 'social',
+  snippet:
+    '中秋檔期主打戶外折疊桌椅組，組合價 1,880 元（原價 2,380 元），檔期 9/15 至 9/30。溝通主軸為「不烤肉也能過節」的陽台場景。',
+}
+
+/**
+ * 同一檔期、不同語氣的貼文。
+ *
+ * 語氣比較功能要能看出差異才有展示價值，所以四種語氣是分別寫的，
+ * 不是同一段文字換幾個詞：幽默版從一個笑點切入、專業版先講規格、
+ * 簡潔版把句子壓到最短、溫暖版維持生活場景敘事。
+ */
+const MIDAUTUMN_POSTS: Record<string, string> = {
+  幽默風趣:
+    '烤肉這件事，年年說要改革，年年還是站在煙裡流淚。\n\n今年我們決定擺爛得徹底一點：折疊桌搬到陽台，柚子剝一半放著，風自己會來。不用顧火，不用搶位子，衣服也不會有味道。\n\n禾光戶外折疊桌椅組，中秋檔期組合價 1,880 元，到 9/30。\n官網選購：生活提案專區\n\n#中秋 #陽台生活 #禾光生活',
+  溫暖親切:
+    '中秋連假的陽台，是一年裡最適合待著的地方。\n\n把折疊小桌搬出來，柚子剝一半放著，風從欄杆吹進來剛剛好。不用烤肉也能過節，坐得舒服比什麼都重要。\n\n禾光戶外折疊桌椅組，中秋檔期組合價 1,880 元，即日起到 9/30。\n官網選購：生活提案專區\n\n#中秋 #陽台生活 #禾光生活',
+  專業沉穩:
+    '中秋連假前，先把陽台整理成可以久坐的地方。\n\n折疊桌椅收納後厚度 12 公分，靠牆即可；桌面經防潑處理，柚子汁與茶漬擦拭即除。三人以內的家庭聚會，尺寸剛好。\n\n禾光戶外折疊桌椅組，中秋檔期組合價 1,880 元（原價 2,380 元），檔期至 9/30。\n官網選購：生活提案專區\n\n#中秋 #陽台生活 #禾光生活',
+  簡潔俐落:
+    '中秋，把陽台變成第二個客廳。\n\n折疊桌椅一組，柚子一顆，風自己會來。\n\n禾光戶外折疊桌椅組｜中秋組合價 1,880 元｜至 9/30\n官網選購：生活提案專區\n\n#中秋 #陽台生活 #禾光生活',
 }
 
 const DEFAULT_POST = {
@@ -128,8 +164,16 @@ export async function postChat(req: ChatRequest): Promise<ChatResponse> {
     throw new ApiError('知識庫檢索服務暫時無法使用，請稍後再試。')
   }
 
+  // 敏感內容優先於一般問答判斷：寧可轉人工，不要生成有風險的內容。
+  const sensitive = SENSITIVE_RULES.find((r) => r.match.test(req.message))
+  if (sensitive) {
+    return { status: 'escalated', reason: sensitive.reason, category: sensitive.category }
+  }
+
   const hit = CHAT_REPLIES.find((r) => r.match.test(req.message))
-  return hit ? { answer: hit.answer, sources: hit.sources } : FALLBACK_REPLY
+  return hit
+    ? { status: 'answered', answer: hit.answer, sources: hit.sources }
+    : FALLBACK_REPLY
 }
 
 export async function getCampaigns(): Promise<Campaign[]> {
@@ -137,7 +181,7 @@ export async function getCampaigns(): Promise<Campaign[]> {
   return MOCK_CAMPAIGNS
 }
 
-export async function generatePost(id: string, _req: GenerateRequest): Promise<GenerateResponse> {
+export async function generatePost(id: string, req: GenerateRequest): Promise<GenerateResponse> {
   await delay(THINKING_MS)
 
   const campaign = MOCK_CAMPAIGNS.find((c) => c.id === id)
@@ -159,6 +203,14 @@ export async function generatePost(id: string, _req: GenerateRequest): Promise<G
     }
   }
 
-  const content = GENERATED_POSTS[id] ?? DEFAULT_POST
-  return { status: 'generated', post: content.post, sources: content.sources }
+  if (id === 'midautumn-2026') {
+    const post = MIDAUTUMN_POSTS[req.tone ?? ''] ?? MIDAUTUMN_POSTS['溫暖親切']
+    return {
+      status: 'generated',
+      post: post as string,
+      sources: [BRAND_VOICE, POSTING_GUIDE, MIDAUTUMN_PRODUCT],
+    }
+  }
+
+  return { status: 'generated', post: DEFAULT_POST.post, sources: DEFAULT_POST.sources }
 }

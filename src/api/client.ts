@@ -80,9 +80,27 @@ function normalizeSources(raw: unknown): Source[] {
   })
 }
 
+/**
+ * 問答回應的正規化。
+ *
+ * `escalated`（敏感內容轉人工）與 `answered` 都是合法的成功回應。
+ * 需求文件初版合約沒有 `status` 欄位，因此只要不是明確的 escalated，
+ * 一律視為 answered —— 舊格式 `{ answer, sources }` 不改也能運作。
+ */
 function normalizeChat(raw: unknown): ChatResponse {
   const r = asRecord(raw)
+
+  if (r.status === 'escalated') {
+    const category = asString(r.category)
+    return {
+      status: 'escalated',
+      reason: asString(r.reason, '這個問題已轉由真人處理。'),
+      ...(category ? { category } : {}),
+    }
+  }
+
   return {
+    status: 'answered',
     answer: asString(r.answer),
     sources: normalizeSources(r.sources),
   }

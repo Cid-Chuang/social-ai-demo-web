@@ -18,6 +18,8 @@ const SAMPLES = [
   '我們的品牌語氣應該是什麼樣子？',
   '客戶問出貨要幾天，該怎麼回？',
   '這一季的社群趨勢有什麼變化？',
+  // 刻意觸發敏感內容判定，展示助手不自動回答而是轉人工
+  '有客人說要提告，我該在留言區怎麼回？',
 ]
 
 /** 功能 1：依知識庫回答問題。單輪問答，不串接上下文。 */
@@ -28,6 +30,8 @@ export function ChatPanel() {
   const { state, run } = useTask<ChatResponse>()
 
   const pending = state.status === 'pending'
+  const answered = state.status === 'done' && state.data.status === 'answered' ? state.data : null
+  const escalated = state.status === 'done' && state.data.status === 'escalated' ? state.data : null
 
   function submit(event?: FormEvent) {
     event?.preventDefault()
@@ -106,6 +110,17 @@ export function ChatPanel() {
         </Notice>
       ) : null}
 
+      {/* 敏感內容：助手刻意不生成答案，改為轉人工。這與錯誤是不同性質的結果。 */}
+      {escalated ? (
+        <Notice
+          variant="escalated"
+          title="這個問題已轉由真人處理"
+          {...(escalated.category ? { meta: `判定分類：${escalated.category}` } : {})}
+        >
+          {escalated.reason}
+        </Notice>
+      ) : null}
+
       {state.status === 'idle' ? (
         <div className="mt-6 rounded-[3px] border border-dashed border-rule px-5 py-8 text-ink-faint sm:px-[30px] sm:py-[34px]">
           <p className="m-0 max-w-[46ch]">
@@ -114,7 +129,7 @@ export function ChatPanel() {
         </div>
       ) : null}
 
-      {pending || state.status === 'done' ? (
+      {pending || answered ? (
         <article
           className={`sheet mt-6 grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_300px] ${
             pending ? 'sheet-working' : ''
@@ -129,7 +144,7 @@ export function ChatPanel() {
             {pending ? (
               <Skeleton message="正在檢索知識庫並生成回覆，大約需要數秒到十幾秒…" />
             ) : (
-              <p className="generated">{state.status === 'done' ? state.data.answer : ''}</p>
+              <p className="generated">{answered?.answer ?? ''}</p>
             )}
           </div>
 
@@ -137,7 +152,7 @@ export function ChatPanel() {
             {pending ? (
               <p className="m-0 text-[13px] text-ink-faint">來源會在回覆完成後一併列出。</p>
             ) : (
-              <SourceCitationList sources={state.status === 'done' ? state.data.sources : []} />
+              <SourceCitationList sources={answered?.sources ?? []} />
             )}
           </aside>
         </article>

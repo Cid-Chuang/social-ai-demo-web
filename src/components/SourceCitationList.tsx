@@ -11,10 +11,16 @@ const TOPIC_LABEL: Record<string, string> = {
  * 引用來源清單。功能 1（問答）與功能 2（檔期貼文）共用。
  * 在桌面版以側註形式與內容並列，強調回覆有明確出處。
  */
-export function SourceCitationList({ sources }: { sources: Source[] }) {
+export function SourceCitationList({
+  sources,
+  title = '引用來源',
+}: {
+  sources: Source[]
+  title?: string
+}) {
   return (
     <>
-      <h3 className="m-0 mb-4 text-[13px] font-bold text-ink-soft">引用來源</h3>
+      <h3 className="m-0 mb-4 text-[13px] font-bold text-ink-soft">{title}</h3>
 
       {sources.length === 0 ? (
         <p className="m-0 text-[13px] text-ink-faint">這次回覆沒有附上引用來源。</p>
