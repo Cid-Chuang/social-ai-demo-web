@@ -1,0 +1,22 @@
+node_modules
+dist
+
+# 環境設定（.env.example 為範本，需納入版控）
+.env
+.env.local
+*.local
+
+# 字型子集的原始 TTF 快取（各約 20MB，由 scripts/build-fonts.py 自動下載）
+.fontcache
+
+# 字型建置用的 Python 虛擬環境
+.venv
+
+# 編輯器與工具產物
+.idea
+.vscode
+.playwright-mcp
+.DS_Store
+
+# AI 協作的工作階段紀錄
+.remember

@@ -1,0 +1,139 @@
+/* ──────────────────────────────────────────────────────────────
+   社群 AI 助手 · 能力展示前端
+   設計概念：編輯檯上的稿紙。介面文字為台北黑體，模型生成的內容為襯線體，
+   引用來源以側註形式與內容並列，強調「每句話都有出處」。
+   ────────────────────────────────────────────────────────────── */
+
+@import 'tailwindcss';
+
+/* 台北黑體：採教育部國字標準字體，自行託管以確保離線可用。
+   本家只提供 Light / Regular / Bold 三個字重，故版面最粗只到 700。
+   子集由 scripts/build-fonts.py 依 Big5 字頻分層重切，見該檔說明。 */
+@import '../fonts/taipei-sans-tc.css';
+
+@theme {
+  /* 桌面與紙張 */
+  --color-desk: #e9ebef;
+  --color-desk-edge: #dcdfe5;
+  --color-sheet: #ffffff;
+  --color-rule: #d6dae0;
+  --color-rule-soft: #e8eaee;
+
+  /* 墨色 */
+  --color-ink: #16202b;
+  --color-ink-soft: #55606d;
+  --color-ink-faint: #868f9a;
+
+  /* 主色 */
+  --color-indigo: #243b7a;
+  --color-indigo-deep: #1a2c5c;
+  --color-indigo-wash: #eaeefa;
+
+  /* 檔期狀態 */
+  --color-status-active: #0d6b52;
+  --color-status-active-bg: #e2f1ec;
+  --color-status-expired: #667080;
+  --color-status-expired-bg: #eceef1;
+  --color-status-upcoming: #8a5a06;
+  --color-status-upcoming-bg: #faefda;
+
+  /* 拒絕生成（非錯誤）與錯誤 */
+  --color-refuse: #8a3a1b;
+  --color-refuse-bg: #fbeee7;
+  --color-refuse-rule: #e7c4b1;
+  --color-fault: #9c2d2d;
+  --color-fault-bg: #fbebeb;
+  --color-fault-rule: #e6bcbc;
+
+  --font-sans: 'Taipei Sans TC', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-serif: 'Noto Serif TC', 'Songti TC', Georgia, serif;
+
+  --animate-scan: scan 1.5s ease-in-out infinite;
+}
+
+@keyframes scan {
+  0% { background-position: -45% 0; }
+  100% { background-position: 145% 0; }
+}
+
+@layer base {
+  body {
+    background-color: var(--color-desk);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.7;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-indigo);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  /* 稿紙：全站的內容容器 */
+  .sheet {
+    @apply relative rounded-[3px] border border-rule bg-sheet;
+  }
+
+  /* 生成中：稿紙頂端的掃描線。全站唯一的非互動動畫。 */
+  .sheet-working::before {
+    content: '';
+    @apply absolute inset-x-[-1px] top-[-1px] h-0.5 animate-scan bg-no-repeat;
+    background-image: linear-gradient(90deg, transparent, var(--color-indigo), transparent);
+    background-size: 45% 100%;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sheet-working::before {
+      @apply animate-none opacity-35;
+      background-image: none;
+      background-color: var(--color-indigo);
+    }
+  }
+
+  .btn {
+    @apply cursor-pointer rounded-[3px] border border-indigo bg-indigo px-[22px] py-2.5
+           font-bold text-white transition-colors;
+  }
+  .btn:hover:not(:disabled) {
+    @apply border-indigo-deep bg-indigo-deep;
+  }
+  .btn:disabled {
+    @apply cursor-not-allowed border-rule bg-[#eef0f3] text-ink-faint;
+  }
+
+  .input {
+    @apply w-full rounded-[3px] border border-rule bg-sheet px-3.5 py-3 leading-relaxed;
+  }
+  .input:focus-visible {
+    @apply border-indigo;
+  }
+
+  .field-label {
+    @apply text-[13px] font-bold text-ink-soft;
+  }
+
+  .hint {
+    @apply text-[13px] text-ink-faint;
+  }
+
+  /* 範例問題的膠囊按鈕 */
+  .chip {
+    @apply cursor-pointer rounded-full border border-rule bg-sheet px-3.5 py-[5px]
+           text-[13px] text-ink-soft;
+  }
+  .chip:hover {
+    @apply border-indigo text-indigo;
+  }
+
+  .badge {
+    @apply inline-block rounded-full px-2.5 py-0.5 text-xs font-bold whitespace-nowrap;
+  }
+
+  /* 模型生成的內容一律使用襯線體，與介面文字區分 */
+  .generated {
+    @apply m-0 font-serif text-[16.5px] leading-[1.95] break-words whitespace-pre-wrap;
+  }
+}

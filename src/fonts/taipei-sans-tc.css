@@ -1,0 +1,24 @@
+/* 台北黑體 Taipei Sans TC Beta 1.000 —— 授權：SIL Open Font License 1.1
+ * 來源：https://github.com/vp-tw/taipei-sans-tc
+ *
+ * 本檔與同目錄的 woff2 由 scripts/build-fonts.py 產生，請勿手動編輯。
+ * 收錄 Big5 一級字（常用字）；未收錄的罕用字由 font stack 的下一個字型接手。
+ */
+
+@font-face {
+  font-family: 'Taipei Sans TC';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Taipei Sans TC Beta Regular'), local('TaipeiSansTCBeta-Regular'),
+       url('./taipei-sans-tc-regular.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Taipei Sans TC';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Taipei Sans TC Beta Bold'), local('TaipeiSansTCBeta-Bold'),
+       url('./taipei-sans-tc-bold.woff2') format('woff2');
+}
