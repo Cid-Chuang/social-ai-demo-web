@@ -20,7 +20,7 @@
 
 ## 技術棧
 
-React 19 · TypeScript · Vite · Tailwind CSS v4 · 台北黑體（自行託管）
+React 19 · TypeScript · Vite · Tailwind CSS v4 · Vitest · 台北黑體（自行託管）
 
 ## 開始開發
 
@@ -47,6 +47,8 @@ npm run dev                  # http://localhost:5173
 | `npm run build` | 型別檢查 + 產出 `dist/` |
 | `npm run preview` | 預覽 build 產物 |
 | `npm run typecheck` | 只做型別檢查 |
+| `npm test` | 跑單元測試 |
+| `npm run test:watch` | 測試監看模式 |
 
 ## 專案結構
 
@@ -79,6 +81,15 @@ src/
 （`.sheet`、`.btn`、`.input`、`.badge` 等）收在 `global.css` 的
 `@layer components`，避免 JSX 被十幾個 class 塞爆。設計 token 定義在 `@theme`
 區塊，會自動產生對應的 utility（例如 `--color-ink` 產生 `text-ink`、`bg-ink`）。
+
+## 測試
+
+```bash
+npm test
+```
+
+只測型別擋不住的邏輯：守門結果（`refused` / `escalated`）必須被當成正常回應、
+後端欄位缺漏時的容錯，以及 `useTask` 的競態保護。共 23 個測試。
 
 ## 幾個刻意的設計決定
 

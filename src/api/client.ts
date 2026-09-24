@@ -47,7 +47,7 @@ async function request<T>(path: string, body?: unknown): Promise<T> {
     const message =
       payload && typeof payload === 'object' && typeof (payload as Record<string, unknown>).error === 'string'
         ? ((payload as Record<string, unknown>).error as string)
-        : `服務回應異常(HTTP ${res.status})。`
+        : `服務回應異常（HTTP ${res.status}）。`
     throw new ApiError(message)
   }
 

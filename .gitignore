@@ -1,6 +1,9 @@
 node_modules
 dist
 
+# tsc -b 的增量建置快取
+*.tsbuildinfo
+
 # 環境設定（.env.example 為範本，需納入版控）
 .env
 .env.local

@@ -22,21 +22,43 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | TypeScript | 7 | `strict` 全開，另含 `noUnusedLocals` / `noUnusedParameters` / `verbatimModuleSyntax`。 |
 | Tailwind CSS | 4 | CSS-first 設定，詳見下方「樣式」一節。 |
 | Vite | 8 | 建置與開發伺服器。 |
+| Vitest | 5 | 單元測試，jsdom 環境。 |
 
-型別是這個專案的主要防線 —— 沒有測試套件，`npm run typecheck` 就是唯一的自動化驗證。特別是 `api/types.ts` 裡 `GenerateResponse` 的 discriminated union，它讓 `generated` / `refused` 兩種回應在編譯期就無法混用。新增 API 回應時沿用同樣的做法，不要用 optional 欄位含糊帶過。
+型別是這個專案的第一道防線。特別是 `api/types.ts` 裡 `GenerateResponse` 與 `ChatResponse` 的 discriminated union，它讓 `generated` / `refused`、`answered` / `escalated` 在編譯期就無法混用。新增 API 回應時沿用同樣的做法，不要用 optional 欄位含糊帶過。
+
+型別擋不住的部分由單元測試補上，見下方「測試」一節。
 
 刻意**不使用**：登入／會員系統、資料庫、狀態管理函式庫（Redux / Zustand 等）、路由函式庫。目前的規模用 `useState` 加兩個面板就夠，引入前先確認真的需要。
 
 ## 指令
 
 ```bash
-npm run dev        # 開發伺服器 http://localhost:5173
-npm run build      # tsc -b 型別檢查 + vite build
-npm run preview    # 預覽 dist/
-npm run typecheck  # 只做型別檢查
+npm run dev         # 開發伺服器 http://localhost:5173
+npm run build       # tsc -b 型別檢查 + vite build
+npm run preview     # 預覽 dist/
+npm run typecheck   # 只做型別檢查
+npm test            # 跑單元測試（vitest run）
+npm run test:watch  # 監看模式
 ```
 
-專案**沒有測試套件也沒有 linter**。驗證手段是 `npm run typecheck` 加上實際開瀏覽器跑一次驗收標準。
+專案**沒有 linter**。動過程式碼後的最低驗證是 `npm run typecheck` 加 `npm test`；
+動過畫面行為則還要實際開瀏覽器跑一次驗收標準。
+
+## 測試
+
+只測「型別擋不住、但改壞了會在展示現場出糗」的邏輯，不追求覆蓋率：
+
+| 檔案 | 測什麼 |
+|---|---|
+| `src/api/client.test.ts` | 守門結果（`refused` / `escalated`）必須是正常回應而非錯誤；欄位缺漏或格式不符時不讓畫面壞掉；HTTP 與連線錯誤轉成友善訊息 |
+| `src/hooks/useTask.test.ts` | 競態保護：先送出的慢回應不得覆蓋後送出的快回應；`reset()` 之後進行中的請求回來也不寫入狀態 |
+
+兩個要點：
+
+- API 測試刻意透過對外的 `postChat` / `getCampaigns` / `generatePost` 進行，而不是直接測內部的
+  `normalize*()` —— 這樣連同 fetch 包裝與錯誤處理一起涵蓋，也不需要為了測試把內部函式匯出。
+- `vite.config.ts` 的 `test.env` **釘死了 `VITE_API_BASE_URL`**。不釘的話 Vitest 會讀
+  `.env.local`，測試結果就會隨每個人的本機設定而不同（這個坑實際踩過一次）。
 
 ## 最重要的一件事：`refused` 不是錯誤
 
@@ -108,6 +130,8 @@ api/index.ts    依 VITE_USE_MOCK 決定匯出哪一個
 每次請求領一個遞增號碼，回來時號碼對不上就整包丟棄。情境是使用者送出問題 A（慢）後不等結果又送出 B（快），沒有保護的話 A 的回應晚到會蓋掉 B 的答案 —— 畫面顯示 B 的提問配 A 的答案，在 demo 場合特別致命。
 
 只有真正的錯誤會進 `error` 狀態；業務層的拒絕結果是正常回傳值，由呼叫端判讀。
+
+這段邏輯有單元測試把關（`src/hooks/useTask.test.ts`），改動後務必跑 `npm test`。
 
 ## 樣式：Tailwind v4
 
